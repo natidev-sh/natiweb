@@ -1,0 +1,174 @@
+---
+title: Workflows
+description: Chain multiple AI operations together for complex tasks
+---
+
+# Workflows
+
+Workflows allow you to chain multiple AI operations together to accomplish complex tasks. Build sophisticated AI pipelines without writing code.
+
+## Overview
+
+A workflow is a series of connected steps where the output of one step becomes the input for the next. This enables you to:
+
+- **Break down complex tasks** into manageable steps
+- **Combine different AI models** for specialized tasks
+- **Add conditional logic** based on AI responses
+- **Integrate external APIs** between AI calls
+
+> [!NOTE]
+> Workflows are available on the Pro plan and above.
+
+## Creating a Workflow
+
+```typescript
+// Example workflow using the Nati SDK
+import { NatiClient } from '@nati/sdk';
+
+const client = new NatiClient({
+  apiKey: process.env.NATI_API_KEY
+});
+
+const workflow = await client.workflows.create({
+  name: 'Content Generation Pipeline',
+  steps: [
+    {
+      type: 'ai',
+      model: 'gpt-4',
+      prompt: 'Generate a blog post outline about {{topic}}'
+    },
+    {
+      type: 'ai',
+      model: 'claude-3',
+      prompt: 'Expand this outline into a full article: {{step1.output}}'
+    },
+    {
+      type: 'ai',
+      model: 'gpt-4',
+      prompt: 'Proofread and improve: {{step2.output}}'
+    }
+  ]
+});
+```
+
+## Workflow Steps
+
+### AI Steps
+Execute AI model operations with specific prompts.
+
+**Configuration:**
+- Model selection
+- Temperature
+- Max tokens
+- System prompt
+
+### API Steps
+Call external APIs to fetch or send data.
+
+**Configuration:**
+- HTTP method (GET, POST, PUT, DELETE)
+- URL endpoint
+- Headers
+- Request body
+
+### Transform Steps
+Manipulate data between steps using JavaScript.
+
+```javascript
+// Example transform step
+function transform(input) {
+  return {
+    title: input.headline.toUpperCase(),
+    content: input.body.trim(),
+    wordCount: input.body.split(' ').length
+  };
+}
+```
+
+### Conditional Steps
+Add branching logic to your workflows.
+
+> [!WARNING]
+> Conditional steps can significantly increase workflow complexity. Test thoroughly!
+
+## Variables and Context
+
+Access data from previous steps using the `{{}}` syntax:
+
+```
+{{step1.output}}        - Output from step 1
+{{step2.data.title}}    - Nested property access
+{{input.userQuery}}     - Original workflow input
+```
+
+## Error Handling
+
+Workflows include built-in error handling:
+
+| Error Type | Behavior | Retry |
+|-----------|----------|-------|
+| API Timeout | Retry 3x | Yes |
+| Rate Limit | Wait & Retry | Yes |
+| Invalid Response | Fail | No |
+| Model Error | Fail | No |
+
+> [!ERROR]
+> Failed workflows consume credits for completed steps only.
+
+## Best Practices
+
+1. **Keep steps focused** - Each step should do one thing well
+2. **Test incrementally** - Verify each step before adding the next
+3. **Use variables** - Make workflows reusable with variables
+4. **Add error handling** - Plan for failures
+5. **Monitor costs** - Workflows use more credits
+
+## Example Workflows
+
+### Research Assistant
+
+```yaml
+Steps:
+  1. Search web for topic
+  2. Summarize findings with AI
+  3. Generate key insights
+  4. Create actionable recommendations
+```
+
+### Content Moderator
+
+```yaml
+Steps:
+  1. Analyze content for violations
+  2. Check against community guidelines
+  3. Flag inappropriate content
+  4. Generate moderation report
+```
+
+### Data Enrichment
+
+```yaml
+Steps:
+  1. Fetch company data from API
+  2. Analyze with AI for insights
+  3. Generate summary report
+  4. Save to database
+```
+
+## Workflow Templates
+
+Nati provides pre-built templates:
+
+- **Content Pipeline** - Generate, edit, proofread content
+- **Data Analysis** - Extract, transform, analyze data
+- **Customer Support** - Route, respond, escalate tickets
+- **Research Assistant** - Search, summarize, report findings
+
+> [!SUCCESS]
+> Templates save hours of setup time and follow best practices!
+
+## Next Steps
+
+- Explore [Integrations](/docs/integrations) to connect external services
+- Learn about [Teams](/docs/teams) to share workflows
+- Check the [API Reference](/docs/api-reference) for programmatic access

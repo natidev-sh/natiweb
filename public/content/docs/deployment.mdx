@@ -1,0 +1,146 @@
+---
+title: Deployment
+description: Deploy your AI applications to production
+---
+
+# Deployment
+
+Deploy your Nati applications from the desktop app to make them accessible anywhere.
+
+## Deployment Options
+
+### Cloud Deployment
+Deploy to Nati Cloud for instant availability.
+
+```bash
+# Using Nati CLI
+nati deploy --app my-app --region us-east-1
+```
+
+> [!NOTE]
+> Cloud deployment is available on Pro and Enterprise plans.
+
+### Docker Container
+Package your app as a Docker container.
+
+```dockerfile
+FROM nati/runtime:latest
+
+COPY ./app /app
+WORKDIR /app
+
+EXPOSE 8080
+CMD ["nati", "serve"]
+```
+
+### Self-Hosted
+Deploy on your own infrastructure.
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  nati-app:
+    image: your-registry/nati-app:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - NATI_API_KEY=${NATI_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+```
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NATI_API_KEY` | Your API key | Yes |
+| `NATI_ENV` | Environment (dev/prod) | No |
+| `PORT` | Server port | No |
+| `LOG_LEVEL` | Logging level | No |
+
+> [!WARNING]
+> Never commit API keys to version control!
+
+## Scaling
+
+### Auto-scaling
+Nati Cloud automatically scales based on demand.
+
+```javascript
+// Configure scaling in your app settings
+await client.apps.configure({
+  appId: 'my-app',
+  scaling: {
+    minInstances: 1,
+    maxInstances: 10,
+    targetCPU: 70
+  }
+});
+```
+
+### Load Balancing
+Distribute traffic across multiple instances.
+
+## Monitoring
+
+Track your deployment health:
+
+- **Response times** - Monitor API latency
+- **Error rates** - Track failures
+- **Resource usage** - CPU, memory, bandwidth
+- **AI usage** - Token consumption
+
+> [!SUCCESS]
+> Set up alerts to catch issues before users notice!
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: Deploy to Nati Cloud
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to Nati
+        run: |
+          npm install -g @nati/cli
+          nati deploy --api-key ${{ secrets.NATI_API_KEY }}
+```
+
+### GitLab CI
+
+```yaml
+deploy:
+  stage: deploy
+  script:
+    - npm install -g @nati/cli
+    - nati deploy --app $APP_NAME
+  only:
+    - main
+```
+
+## Rollback
+
+Quickly revert to a previous version:
+
+```bash
+# List deployments
+nati deployments list
+
+# Rollback to specific version
+nati rollback --version v1.2.3
+```
+
+## Next Steps
+
+- Configure [Integrations](/docs/integrations)
+- Set up [Teams](/docs/teams) access
+- Review [API Reference](/docs/api-reference)

@@ -1,0 +1,89 @@
+---
+title: Apps
+description: Learn how to create and manage AI applications with Nati
+---
+
+# Apps
+
+Nati allows you to build powerful AI applications without writing code. Each app is a self-contained unit that can be configured, deployed, and shared with your team.
+
+## What is an App?
+
+An app in Nati is a combination of:
+- **AI Model Configuration** - Choose from GPT-5, Claude, Gemini, and more
+- **Prompts & Instructions** - Define how the AI should behave
+- **Integrations** - Connect to external services and APIs
+- **Workflows** - Chain multiple AI operations together
+
+> [!NOTE]
+> Apps are isolated from each other and can have different configurations and access controls.
+
+## Creating Your First App
+
+Creating an app is simple:
+
+1. Click **"New App"** in the dashboard
+2. Choose a template or start from scratch
+3. Configure your AI model settings
+4. Add your instructions and prompts
+5. Test and deploy
+
+```javascript
+// Example: Using the Nati SDK to create an app
+import { NatiClient } from '@nati/sdk';
+
+const client = new NatiClient({
+  apiKey: process.env.NATI_API_KEY
+});
+
+const app = await client.apps.create({
+  name: 'Customer Support Bot',
+  model: 'gpt-4',
+  systemPrompt: 'You are a helpful customer support agent.',
+  temperature: 0.7
+});
+```
+
+## App Types
+
+Nati supports several app types:
+
+### Chat Apps
+Interactive conversational interfaces with memory and context.
+
+### Completion Apps
+Single-turn text generation for specific tasks.
+
+### Workflow Apps
+Multi-step processes that combine multiple AI operations.
+
+> [!WARNING]
+> Workflow apps consume more credits as they make multiple AI calls.
+
+## App Settings
+
+Configure your app behavior:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Model | AI model to use | GPT-3.5 |
+| Temperature | Response randomness (0-1) | 0.7 |
+| Max Tokens | Maximum response length | 2000 |
+| Timeout | Request timeout in seconds | 30 |
+
+## Best Practices
+
+> [!SUCCESS]
+> Follow these tips for better app performance:
+
+- **Be specific** in your instructions
+- **Test thoroughly** before deploying
+- **Monitor usage** and adjust settings
+- **Use templates** to get started quickly
+- **Version control** your prompts
+
+## Next Steps
+
+- Learn about [Workflows](/docs/workflows)
+- Set up [Integrations](/docs/integrations)
+- Explore [Teams](/docs/teams) for collaboration

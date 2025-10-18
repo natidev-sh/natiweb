@@ -1,0 +1,250 @@
+---
+title: Integrations
+description: Connect Nati with your favorite tools and services
+---
+
+# Integrations
+
+Connect Nati to external services and APIs to extend your AI applications with real-world data and actions.
+
+## Available Integrations
+
+### Data Sources
+
+#### Google Sheets
+Read and write data from Google Sheets.
+
+```javascript
+// Example: Read from Google Sheets
+const integration = await client.integrations.googleSheets.read({
+  spreadsheetId: 'your-sheet-id',
+  range: 'A1:D10'
+});
+```
+
+#### Airtable
+Sync records with Airtable bases.
+
+```javascript
+const records = await client.integrations.airtable.list({
+  baseId: 'your-base-id',
+  tableId: 'your-table-id'
+});
+```
+
+#### Notion
+Access and update Notion databases.
+
+```javascript
+const pages = await client.integrations.notion.query({
+  databaseId: 'your-database-id',
+  filter: { property: 'Status', equals: 'Active' }
+});
+```
+
+### Communication
+
+#### Slack
+Send messages and notifications to Slack channels.
+
+```javascript
+await client.integrations.slack.sendMessage({
+  channel: '#notifications',
+  text: 'AI task completed successfully!'
+});
+```
+
+#### Discord
+Post updates to Discord servers.
+
+```javascript
+await client.integrations.discord.webhook({
+  webhookUrl: 'your-webhook-url',
+  content: 'New AI insight generated',
+  embeds: [{ title: 'Results', description: 'Analysis complete' }]
+});
+```
+
+#### Email (SendGrid)
+Send automated emails based on AI outputs.
+
+```javascript
+await client.integrations.sendgrid.send({
+  to: 'user@example.com',
+  subject: 'AI Report Ready',
+  html: generatedContent
+});
+```
+
+### Databases
+
+#### PostgreSQL
+Query and update PostgreSQL databases.
+
+```javascript
+const results = await client.integrations.postgres.query({
+  connectionString: process.env.DATABASE_URL,
+  query: 'SELECT * FROM users WHERE active = true'
+});
+```
+
+#### MongoDB
+Work with MongoDB collections.
+
+```javascript
+await client.integrations.mongodb.insertOne({
+  uri: process.env.MONGO_URI,
+  database: 'myapp',
+  collection: 'ai_results',
+  document: { result: aiOutput, timestamp: new Date() }
+});
+```
+
+### APIs & Webhooks
+
+#### REST APIs
+Call any REST API endpoint.
+
+```javascript
+const response = await client.integrations.http.request({
+  method: 'POST',
+  url: 'https://api.example.com/data',
+  headers: { 'Authorization': 'Bearer token' },
+  body: { data: aiResult }
+});
+```
+
+#### Webhooks
+Trigger webhooks when AI tasks complete.
+
+```javascript
+await client.integrations.webhook.trigger({
+  url: 'https://your-app.com/webhook',
+  method: 'POST',
+  payload: {
+    event: 'ai.completed',
+    result: output
+  }
+});
+```
+
+## OAuth Integrations
+
+Some integrations require OAuth authentication:
+
+1. Go to **Settings** → **Integrations**
+2. Click **Connect** on the integration
+3. Authorize Nati to access your account
+4. Use the integration in your apps
+
+> [!NOTE]
+> OAuth tokens are encrypted and stored securely.
+
+## Custom Integrations
+
+Build your own integrations using our SDK:
+
+```typescript
+import { Integration } from '@nati/sdk';
+
+class CustomIntegration extends Integration {
+  async execute(params: any) {
+    // Your integration logic
+    const response = await fetch(params.url, {
+      method: 'POST',
+      headers: params.headers,
+      body: JSON.stringify(params.data)
+    });
+    
+    return await response.json();
+  }
+}
+
+// Register your integration
+client.integrations.register('custom', new CustomIntegration());
+```
+
+## Rate Limits
+
+| Integration | Limit | Period |
+|------------|-------|--------|
+| Google Sheets | 100 requests | 100 seconds |
+| Slack | 1 request | 1 second |
+| SendGrid | 100 emails | 1 day (Free) |
+| HTTP Requests | 1000 requests | 1 hour |
+
+> [!WARNING]
+> Exceeding rate limits will result in temporary throttling.
+
+## Security Best Practices
+
+1. **Use environment variables** for API keys
+2. **Enable OAuth** when available
+3. **Rotate credentials** regularly
+4. **Monitor access logs** in Settings
+5. **Limit permissions** to what's needed
+
+> [!ERROR]
+> Never hardcode API keys in your apps!
+
+## Integration Templates
+
+Pre-built integration templates:
+
+### Data Sync Template
+Automatically sync data between services.
+
+```yaml
+Trigger: New Airtable record
+Actions:
+  - Process with AI
+  - Save to Google Sheets
+  - Send Slack notification
+```
+
+### Report Generator
+Generate and distribute reports.
+
+```yaml
+Trigger: Schedule (daily)
+Actions:
+  - Query database
+  - Analyze with AI
+  - Generate PDF report
+  - Email to stakeholders
+```
+
+### Customer Feedback Loop
+Process customer feedback automatically.
+
+```yaml
+Trigger: New feedback form
+Actions:
+  - Analyze sentiment with AI
+  - Categorize issue
+  - Create Notion ticket
+  - Alert team on Slack
+```
+
+## Troubleshooting
+
+### Connection Failed
+- Check API credentials
+- Verify network connectivity
+- Review rate limits
+
+### Authentication Error
+- Re-authorize OAuth
+- Regenerate API keys
+- Check token expiration
+
+### Timeout Issues
+- Increase timeout settings
+- Reduce payload size
+- Check service status
+
+## Next Steps
+
+- Learn about [Workflows](/docs/workflows) to chain integrations
+- Check [Teams](/docs/teams) for shared integrations
+- Explore the [API Reference](/docs/api-reference) for programmatic access

@@ -1,0 +1,506 @@
+---
+title: API Reference
+description: Complete API reference for Nati.dev
+---
+
+# API Reference
+
+Complete reference for the Nati.dev API.
+
+## Authentication
+
+All API requests require authentication using your API key:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://api.nati.dev/v1/apps
+```
+
+### Get API Key
+
+1. Log in to [nati.dev](https://nati.dev)
+2. Go to **Dashboard → API Keys**
+3. Click **"Create API Key"**
+4. Copy and store securely
+
+## Base URL
+
+```
+https://api.nati.dev/v1
+```
+
+## Endpoints
+
+### Apps
+
+#### List Apps
+
+```http
+GET /apps
+```
+
+**Response:**
+
+```json
+{
+  "apps": [
+    {
+      "id": "app_123",
+      "name": "My Chat Bot",
+      "created_at": "2025-01-15T10:30:00Z",
+      "model": "gpt-4-turbo"
+    }
+  ]
+}
+```
+
+#### Create App
+
+```http
+POST /apps
+```
+
+**Request:**
+
+```json
+{
+  "name": "New App",
+  "description": "My new AI app",
+  "model": "gpt-4-turbo",
+  "system_prompt": "You are a helpful assistant"
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "app_456",
+  "name": "New App",
+  "created_at": "2025-01-15T11:00:00Z"
+}
+```
+
+#### Get App
+
+```http
+GET /apps/:id
+```
+
+#### Update App
+
+```http
+PATCH /apps/:id
+```
+
+#### Delete App
+
+```http
+DELETE /apps/:id
+```
+
+### Teams
+
+#### List Teams
+
+```http
+GET /teams
+```
+
+**Response:**
+
+```json
+{
+  "teams": [
+    {
+      "id": "team_123",
+      "name": "Engineering Team",
+      "role": "owner",
+      "members": 5
+    }
+  ]
+}
+```
+
+#### Create Team
+
+```http
+POST /teams
+```
+
+**Request:**
+
+```json
+{
+  "name": "New Team",
+  "description": "Team for AI development"
+}
+```
+
+#### Get Team
+
+```http
+GET /teams/:id
+```
+
+#### Update Team
+
+```http
+PATCH /teams/:id
+```
+
+#### Delete Team
+
+```http
+DELETE /teams/:id
+```
+
+### Team Members
+
+#### List Members
+
+```http
+GET /teams/:id/members
+```
+
+**Response:**
+
+```json
+{
+  "members": [
+    {
+      "id": "member_123",
+      "user_id": "user_456",
+      "email": "john@example.com",
+      "role": "admin",
+      "joined_at": "2025-01-10T09:00:00Z"
+    }
+  ]
+}
+```
+
+#### Invite Member
+
+```http
+POST /teams/:id/members
+```
+
+**Request:**
+
+```json
+{
+  "email": "user@example.com",
+  "role": "editor"
+}
+```
+
+#### Update Member Role
+
+```http
+PATCH /teams/:id/members/:memberId
+```
+
+**Request:**
+
+```json
+{
+  "role": "admin"
+}
+```
+
+#### Remove Member
+
+```http
+DELETE /teams/:id/members/:memberId
+```
+
+### Shared Apps
+
+#### List Team Apps
+
+```http
+GET /teams/:id/apps
+```
+
+#### Share App with Team
+
+```http
+POST /teams/:id/apps
+```
+
+**Request:**
+
+```json
+{
+  "app_id": "app_123"
+}
+```
+
+#### Unshare App
+
+```http
+DELETE /teams/:id/apps/:appId
+```
+
+### Usage
+
+#### Get Usage Stats
+
+```http
+GET /usage
+```
+
+**Query Parameters:**
+- `start_date`: Start date (ISO 8601)
+- `end_date`: End date (ISO 8601)
+- `model`: Filter by model
+
+**Response:**
+
+```json
+{
+  "total_tokens": 1500000,
+  "total_cost": 25.50,
+  "total_requests": 1250,
+  "breakdown": [
+    {
+      "model": "gpt-4-turbo",
+      "tokens": 800000,
+      "cost": 16.00,
+      "requests": 500
+    }
+  ]
+}
+```
+
+#### Get Daily Usage
+
+```http
+GET /usage/daily
+```
+
+**Response:**
+
+```json
+{
+  "daily_usage": [
+    {
+      "date": "2025-01-15",
+      "tokens": 50000,
+      "cost": 1.00,
+      "requests": 45
+    }
+  ]
+}
+```
+
+## Error Handling
+
+### Error Response
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "Invalid API key",
+    "details": {}
+  }
+}
+```
+
+### Error Codes
+
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `429` - Too Many Requests
+- `500` - Internal Server Error
+
+## Rate Limits
+
+### Free Tier
+
+- 100 requests/hour
+- 1,000 requests/day
+
+### Pro Tier
+
+- 1,000 requests/hour
+- 10,000 requests/day
+
+### Max Tier
+
+- 5,000 requests/hour
+- 50,000 requests/day
+
+**Rate Limit Headers:**
+
+```http
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1705320000
+```
+
+## Webhooks
+
+Subscribe to events:
+
+```http
+POST /webhooks
+```
+
+**Request:**
+
+```json
+{
+  "url": "https://your-app.com/webhook",
+  "events": ["app.created", "team.member.added"]
+}
+```
+
+### Available Events
+
+- `app.created`
+- `app.updated`
+- `app.deleted`
+- `team.created`
+- `team.member.added`
+- `team.member.removed`
+- `usage.threshold.reached`
+
+### Webhook Payload
+
+```json
+{
+  "event": "app.created",
+  "timestamp": "2025-01-15T12:00:00Z",
+  "data": {
+    "app_id": "app_789",
+    "name": "New App"
+  }
+}
+```
+
+## SDKs
+
+### JavaScript/TypeScript
+
+```bash
+npm install @nati/sdk
+```
+
+```typescript
+import { NatiClient } from '@nati/sdk';
+
+const client = new NatiClient({
+  apiKey: 'YOUR_API_KEY'
+});
+
+// List apps
+const apps = await client.apps.list();
+
+// Create app
+const app = await client.apps.create({
+  name: 'My App',
+  model: 'gpt-4-turbo'
+});
+```
+
+### Python
+
+```bash
+pip install nati-sdk
+```
+
+```python
+from nati import NatiClient
+
+client = NatiClient(api_key='YOUR_API_KEY')
+
+# List apps
+apps = client.apps.list()
+
+# Create app
+app = client.apps.create(
+    name='My App',
+    model='gpt-4-turbo'
+)
+```
+
+## Pagination
+
+Large result sets are paginated:
+
+```http
+GET /apps?page=2&limit=50
+```
+
+**Response:**
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 2,
+    "limit": 50,
+    "total": 150,
+    "total_pages": 3,
+    "has_next": true,
+    "has_prev": true
+  }
+}
+```
+
+## Examples
+
+### Complete App Creation
+
+```typescript
+// Create and configure an app
+const response = await fetch('https://api.nati.dev/v1/apps', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Customer Support Bot',
+    description: 'AI-powered customer support',
+    model: 'gpt-4-turbo',
+    system_prompt: 'You are a helpful customer support assistant',
+    temperature: 0.7,
+    max_tokens: 2000
+  })
+});
+
+const app = await response.json();
+console.log('Created app:', app.id);
+```
+
+### Team Management
+
+```typescript
+// Create team and invite members
+const team = await client.teams.create({
+  name: 'Engineering Team'
+});
+
+await client.teams.members.invite(team.id, {
+  email: 'developer@example.com',
+  role: 'editor'
+});
+
+// Share app with team
+await client.teams.apps.share(team.id, {
+  app_id: 'app_123'
+});
+```
+
+## Support
+
+Need help with the API?
+
+- 📖 [API Changelog](/changelog)
+- 💬 [Community Forum](https://community.nati.dev)
+- 📧 [Email Support](mailto:api@nati.dev)

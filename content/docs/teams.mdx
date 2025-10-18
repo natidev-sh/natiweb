@@ -1,0 +1,257 @@
+---
+title: Team Collaboration
+description: Collaborate with your team on AI applications
+---
+
+# Team Collaboration
+
+Work together with your team to build amazing AI applications. Team features are available with **Nati Pro**.
+
+## Creating a Team
+
+1. Navigate to **Dashboard**
+2. Click the dropdown next to your profile
+3. Select **"Create Team"**
+4. Enter team name and description
+5. Click **"Create"**
+
+## Team Roles
+
+### Owner 👑
+
+Full control over the team:
+- Manage all settings
+- Add/remove members
+- Delete team
+- Share apps
+- View activity
+
+### Admin 🛡️
+
+Administrative access:
+- Add/remove members
+- Change member roles
+- Share apps
+- View activity
+- Cannot delete team
+
+### Editor ✏️
+
+Can contribute:
+- View shared apps
+- Fork apps
+- Post to activity feed
+- View team members
+
+### Viewer 👁️
+
+Read-only access:
+- View shared apps
+- View activity feed
+- View team members
+
+## Inviting Members
+
+### Via Email
+
+1. Go to **Team → Members**
+2. Click **"Invite Member"**
+3. Enter email address
+4. Select role
+5. Click **"Send Invite"**
+
+```bash
+# Invite link format
+https://nati.dev/teams/accept?token=abc123
+```
+
+### Via Invite Link
+
+1. Generate an invite link
+2. Set expiration (optional)
+3. Share link with team members
+4. They click and join automatically
+
+## Sharing Apps
+
+Share your AI apps with team members:
+
+1. Go to **My Apps**
+2. Select an app
+3. Click **"Share with Team"**
+4. Choose which team
+5. App appears in team's shared apps
+
+### What Gets Shared
+
+When you share an app:
+- ✅ App configuration
+- ✅ System prompts
+- ✅ Model settings
+- ✅ GitHub repository (if linked)
+- ❌ API keys (never shared)
+- ❌ Usage data (private)
+
+## Team Activity Feed
+
+Stay updated with team activity:
+
+```typescript
+// Example activities
+{
+  "John joined the team": "2 hours ago",
+  "Sarah shared 'Code Generator'": "3 hours ago",
+  "Mike's role changed to Admin": "1 day ago",
+  "New app forked: 'Chat Bot'": "2 days ago"
+}
+```
+
+### Post Updates
+
+Share updates with your team:
+
+1. Go to **Team → Activity**
+2. Write your update
+3. Click **"Post"**
+4. Team members get notified
+
+## Managing Members
+
+### Change Roles
+
+As Owner or Admin:
+
+1. Go to **Team → Members**
+2. Click member's role badge
+3. Select new role
+4. Confirm change
+
+### Remove Members
+
+1. Go to **Team → Members**
+2. Click remove icon next to member
+3. Confirm removal
+4. Member loses team access
+
+## Team Settings
+
+Configure your team:
+
+### General Settings
+
+- **Team Name**: Update anytime
+- **Description**: Brief team overview
+- **Avatar**: Team profile picture
+
+### Danger Zone
+
+- **Leave Team**: Remove yourself
+- **Delete Team**: Permanently delete (Owner only)
+
+## Forking Team Apps
+
+Create your own copy of shared apps:
+
+1. Go to **Team → Apps**
+2. Find app to fork
+3. Click **"Fork"**
+4. App copied to your apps
+5. Customize as needed
+
+### Fork from GitHub
+
+If app has GitHub repo:
+
+```bash
+# Automatically forks the repository
+https://github.com/team/app → https://github.com/you/app
+```
+
+## Best Practices
+
+### Security
+
+- ✅ Only invite trusted members
+- ✅ Use appropriate roles
+- ✅ Review team activity regularly
+- ✅ Remove inactive members
+- ❌ Never share API keys
+
+### Collaboration
+
+- 📝 Post updates frequently
+- 💬 Use descriptive app names
+- 🏷️ Tag team members in posts
+- 📊 Share learnings and tips
+
+## Pricing
+
+Team features require **Nati Pro**:
+
+- **$30/month** (billed monthly)
+- **$24/month** (billed annually)
+
+### What's Included
+
+- ✅ Unlimited teams
+- ✅ Unlimited members per team
+- ✅ Team activity feed
+- ✅ App sharing
+- ✅ Priority support
+
+[Upgrade to Pro →](/onboarding/pricing)
+
+## API Access
+
+Programmatic team management:
+
+```typescript
+// Create team
+POST /api/teams
+{
+  "name": "My Team",
+  "description": "Building AI apps"
+}
+
+// Add member
+POST /api/teams/:teamId/members
+{
+  "email": "user@example.com",
+  "role": "editor"
+}
+
+// Share app
+POST /api/teams/:teamId/apps
+{
+  "appId": "app-123"
+}
+```
+
+## Troubleshooting
+
+### Can't Create Team
+
+Make sure you have:
+- ✅ Nati Pro subscription
+- ✅ Valid payment method
+- ✅ Confirmed email address
+
+### Invite Not Received
+
+Check:
+- Spam/junk folder
+- Email address is correct
+- Generate new invite link
+
+### Member Can't Access Apps
+
+Verify:
+- Member has correct role
+- App is shared with team
+- Member is active (not removed)
+
+## Next Steps
+
+- [Invite Your Team](/docs/teams#inviting-members)
+- [Share Your First App](/docs/teams#sharing-apps)
+- [Manage Permissions](/docs/teams#team-roles)

@@ -1,0 +1,12 @@
+{
+  "type": "template",
+  "title": "nati.dev",
+  "description": "A useful starter built with Nati.",
+  "appId": 4,
+  "manifest": {
+    "tech": {
+      "runtime": "node"
+    }
+  },
+  "createdAt": "2025-10-13T20:18:07.495Z"
+}

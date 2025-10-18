@@ -1,0 +1,77 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+
+const LITELLM_API_URL = 'https://litellm-production-6380.up.railway.app/key/generate'
+const LITELLM_MASTER_KEY = Deno.env.get('LITELLM_MASTER_KEY')
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    if (!LITELLM_MASTER_KEY) {
+      throw new Error('Missing LITELLM_MASTER_KEY environment variable.')
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+    )
+
+    const { data: { user } } = await supabaseClient.auth.getUser()
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const body = await req.json().catch(() => ({}))
+    const metadata = body.metadata || { purpose: 'dev-pro' }
+
+    const liteLLMResponse = await fetch(LITELLM_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LITELLM_MASTER_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ metadata }),
+    })
+
+    if (!liteLLMResponse.ok) {
+      const errorData = await liteLLMResponse.json()
+      throw new Error(errorData.error || 'Failed to generate key from LiteLLM')
+    }
+
+    const keyData = await liteLLMResponse.json()
+
+    const { error: insertError } = await supabaseClient
+      .from('api_keys')
+      .insert({
+        user_id: user.id,
+        api_key: keyData.key,
+        key_info: keyData,
+      })
+
+    if (insertError) {
+      throw insertError
+    }
+
+    return new Response(JSON.stringify(keyData), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    })
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    })
+  }
+})

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Success</title>
+    <style>
+        :root {
+            --background: #f8fafc;
+            --foreground: #0f172a;
+            --primary: #ed3279;
+            --border: #e2e8f0;
+            --muted: #f1f5f9;
+            --muted-foreground: #64748b;
+            --success: #10b981;
+        }
+
+        .dark {
+            --background: #0f172a;
+            --foreground: #f8fafc;
+            --primary: #e11d48;
+            --border: #1e293b;
+            --muted: #1e293b;
+            --muted-foreground: #94a3b8;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background: var(--background);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+        }
+
+        .success-icon {
+            color: var(--success);
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            color: var(--muted-foreground);
+            margin-bottom: 1.5rem;
+        }
+
+        .redirect-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 500;
+        }
+
+        .redirect-btn:hover {
+            opacity: 0.9;
+        }
+
+        .redirect-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .countdown {
+            color: var(--muted-foreground);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .instructions {
+            background: var(--muted);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .instructions p {
+            margin: 0.25rem 0;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        <h1>Connection Successful</h1>
+        <p>Your Supabase account has been successfully connected. Click below to continue to the app.</p>
+        <button id="redirectBtn" class="redirect-btn">Open Nati</button>
+        <div id="countdown" class="countdown"></div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const refreshToken = urlParams.get('refresh_token');
+        const expiresIn = urlParams.get('expires_in');
+        
+        // Update button text if we're missing tokens
+        const redirectBtn = document.getElementById('redirectBtn');
+        if (!token || !refreshToken || !expiresIn) {
+            redirectBtn.textContent = 'Continue to App';
+        }
+        
+        // Set up automatic redirect countdown
+        let countdown = 5;
+        const countdownEl = document.getElementById('countdown');
+        countdownEl.textContent = `Redirecting in ${countdown} seconds...`;
+        
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                redirectToApp();
+            } else {
+                countdownEl.textContent = `Redirecting in ${countdown} seconds...`;
+            }
+        }, 1000);
+        
+        // Handle button click
+        redirectBtn.addEventListener('click', () => {
+            clearInterval(countdownInterval);
+            redirectToApp();
+        });
+        
+        function redirectToApp() {
+            redirectBtn.disabled = true;
+            redirectBtn.textContent = 'Opening...';
+            
+            // Construct the deep link URL
+            let deepLink = 'nati://supabase-oauth-return';
+            
+            // Add tokens to URL if available
+            if (token && refreshToken && expiresIn) {
+                const url = new URL(deepLink);
+                url.searchParams.set('token', token);
+                url.searchParams.set('refreshToken', refreshToken);
+                url.searchParams.set('expiresIn', expiresIn);
+                deepLink = url.toString();
+            }
+            
+            // Attempt to open the app
+            window.location.href = deepLink;
+            
+            // If the app doesn't open, show instructions after a delay
+            setTimeout(() => {
+                redirectBtn.disabled = false;
+                redirectBtn.textContent = 'Open Nati';
+                countdownEl.innerHTML = `
+                    <div class="instructions">
+                        <p>If Nati doesn't open automatically:</p>
+                        <p>1. Make sure Nati is installed</p>
+                        <p>2. Click the button again</p>
+                    </div>
+                `;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
