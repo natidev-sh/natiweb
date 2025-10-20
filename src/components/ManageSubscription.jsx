@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { Loader2, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import CreditDisplay from './CreditDisplay.jsx';
 
 export default function ManageSubscription() {
   const { status, profile, loading: statusLoading } = useSubscriptionStatus();
@@ -37,9 +38,29 @@ export default function ManageSubscription() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Subscription</h2>
-        <p className="text-sm opacity-70">Manage your billing and subscription details.</p>
+        <h2 className="text-xl font-semibold">Manage Subscription</h2>
+        <p className="text-sm opacity-70">Manage your AI credits, billing, and subscription details.</p>
       </div>
+
+      {/* Credit Display - Only show for Pro/Admin users */}
+      {(status === 'Pro' || status === 'Admin') && (
+        <>
+          <div>
+            <h3 className="text-lg font-semibold mb-3">AI Credits</h3>
+            <CreditDisplay />
+          </div>
+
+          <div className="p-4 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-300">
+            <h3 className="font-medium mb-2">How Credits Work</h3>
+            <ul className="text-sm opacity-90 space-y-1 list-disc list-inside">
+              <li>Each API call consumes credits based on model usage</li>
+              <li>Your budget automatically resets every 30 days</li>
+              <li>Generate an API key to start using credits</li>
+              <li>Credits are shared across all your API keys</li>
+            </ul>
+          </div>
+        </>
+      )}
 
       <div className="p-6 rounded-lg border border-[var(--border)] bg-[var(--background-darkest)]">
         <h3 className="text-lg font-semibold mb-4">Your Current Plan</h3>

@@ -171,7 +171,7 @@ export default function NatiVsV0() {
                 <div className="mb-3 flex items-center justify-center">
                   <div className="h-18 w-18 md:h-20 md:w-20 rounded-2xl bg-[var(--background)]/40 flex items-center justify-center">
                     <img
-                      src={isDark ? '/assets/logos/brand-logos/compare-logos/v0-logo-dark.svg' : '/assets/logos/brand-logos/compare-logos/v0-logo-light.svg'}
+                      src={isDark ? '/assets/logos/brand-logos/compare-logos/v0-logo-light.svg' : '/assets/logos/brand-logos/compare-logos/v0-logo-dark.svg'}
                       alt="v0 logo"
                       className="max-h-14 max-w-18 object-contain"
                     />
@@ -311,7 +311,7 @@ export default function NatiVsV0() {
 
             <div className={`${surfaceCard} p-8`}>
               <div className=" mb-6"><img
-                      src={isDark ? '/assets/logos/brand-logos/compare-logos/v0-logo-dark.svg' : '/assets/logos/brand-logos/compare-logos/v0-logo-light.svg'}
+                      src={isDark ? '/assets/logos/brand-logos/compare-logos/v0-logo-light.svg' : '/assets/logos/brand-logos/compare-logos/v0-logo-dark.svg'}
                       alt="v0 Logo"
                       className="max-h-16 max-w-16 object-contain"
                     /></div>
