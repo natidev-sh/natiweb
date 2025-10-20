@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from './auth/AuthContext.jsx'
+import { useSearchParams } from 'react-router-dom'
 import ApiKeys from './components/ApiKeys.jsx'
 import Usage from './components/Usage.jsx'
 import ManageSubscription from './components/ManageSubscription.jsx'
@@ -171,16 +172,34 @@ function Settings() {
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState('settings')
+  const [searchParams, setSearchParams] = useSearchParams()
+  
+  // Get tab from URL params or default to 'settings'
+  const initialTab = searchParams.get('tab') || 'settings'
+  const [activeTab, setActiveTab] = useState(initialTab)
+
+  // Update URL when tab changes
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId)
+    setSearchParams({ tab: tabId })
+  }
+
+  // Update tab if URL changes
+  useEffect(() => {
+    const urlTab = searchParams.get('tab')
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTab(urlTab)
+    }
+  }, [searchParams])
 
   const tabs = [
     { id: 'settings', label: 'Settings', icon: User },
+    { id: 'subscription', label: 'Manage Subscription', icon: CreditCard },
+    { id: 'keys', label: 'API Keys', icon: Key },
     { id: 'myapps', label: 'My Apps', icon: Folder },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'remote', label: 'Remote Control', icon: Monitor },
     { id: 'sessions', label: 'Sessions', icon: Shield },
-    { id: 'keys', label: 'API Keys', icon: Key },
-    { id: 'subscription', label: 'Subscription', icon: CreditCard },
   ]
 
   return (
@@ -199,7 +218,7 @@ export default function Dashboard() {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'border-b-2 border-[var(--primary)] text-[var(--primary)]'
@@ -214,12 +233,12 @@ export default function Dashboard() {
 
         <div className="py-4">
           {activeTab === 'settings' && <Settings />}
+          {activeTab === 'subscription' && <ManageSubscription />}
+          {activeTab === 'keys' && <ApiKeys />}
           {activeTab === 'myapps' && <MyApps />}
           {activeTab === 'analytics' && <Analytics />}
           {activeTab === 'remote' && <RemoteControl />}
           {activeTab === 'sessions' && <Sessions />}
-          {activeTab === 'keys' && <ApiKeys />}
-          {activeTab === 'subscription' && <ManageSubscription />}
         </div>
       </div>
     </>

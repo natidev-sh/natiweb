@@ -4,6 +4,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 const LITELLM_API_URL = 'https://litellm-production-6380.up.railway.app/key/generate'
 const LITELLM_MASTER_KEY = Deno.env.get('LITELLM_MASTER_KEY')
 
+// Credit system constants
+const CONVERSION_RATIO = 15
+const DEFAULT_CREDITS = 350  
+const DEFAULT_MAX_BUDGET = DEFAULT_CREDITS / CONVERSION_RATIO 
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -34,7 +39,15 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}))
-    const metadata = body.metadata || { purpose: 'dev-pro' }
+    const metadata = body.metadata || { purpose: 'dev-pro', user_email: user.email }
+
+    // Prepare the request payload for LiteLLM
+    const liteLLMPayload = {
+      max_budget: DEFAULT_MAX_BUDGET,  // Set budget limit (350 credits = $23.33)
+      budget_duration: "30d",          // Reset every 30 days
+      user_id: user.id,                // Track user
+      metadata: metadata,              // Additional metadata
+    }
 
     const liteLLMResponse = await fetch(LITELLM_API_URL, {
       method: 'POST',
@@ -42,7 +55,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${LITELLM_MASTER_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ metadata }),
+      body: JSON.stringify(liteLLMPayload),
     })
 
     if (!liteLLMResponse.ok) {

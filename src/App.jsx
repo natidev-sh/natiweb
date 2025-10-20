@@ -62,13 +62,15 @@ import NatiVsV0 from './pages/compare/NatiVsV0.jsx'
 import NatiVsBolt from './pages/compare/NatiVsBolt.jsx'
 import NatiVsCursor from './pages/compare/NatiVsCursor.jsx'
 import Integrations from './pages/Integrations.jsx'
+import Playground from './pages/Playground.jsx'
 import { Analytics } from "@vercel/analytics/react" // Corrected import for React
 
 export default function App() {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
   const isDocsPage = location.pathname.startsWith('/docs');
-  const isFullPage = ['/waitlist', '/verify-2fa'].includes(location.pathname);
+  const isPlaygroundPage = location.pathname === '/playground';
+  const isFullPage = ['/waitlist', '/verify-2fa', '/playground'].includes(location.pathname);
 
   const mainClasses = isFullPage
     ? ""
@@ -113,6 +115,7 @@ export default function App() {
             <Route path="/compare/bolt" element={<NatiVsBolt />} />
             <Route path="/compare/cursor" element={<NatiVsCursor />} />
             <Route path="/integrations" element={<Integrations />} />
+            <Route path="/playground" element={<Playground />} />
             <Route path="/invite/:token" element={<AcceptInvite />} />
             
             {/* Legal Pages */}

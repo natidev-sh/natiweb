@@ -106,7 +106,20 @@ app.post('/api/key/generate', async (req, res) => {
       return res.status(500).json({ error: 'Server misconfigured: missing LITELLM_MASTER_KEY' })
     }
 
-    const body = Object.keys(req.body || {}).length ? req.body : { metadata: { purpose: 'dev-pro' } }
+    // Credit system constants (matches desktop app)
+    const CONVERSION_RATIO = 15
+    const DEFAULT_CREDITS = 350  
+    const DEFAULT_MAX_BUDGET = DEFAULT_CREDITS / CONVERSION_RATIO 
+
+    const metadata = req.body?.metadata || { purpose: 'dev-pro' }
+    
+    // Prepare payload with budget limits
+    const body = {
+      max_budget: DEFAULT_MAX_BUDGET,  
+      budget_duration: "30d",          // Reset every 30 days
+      user_id: req.body?.user_id,      // Track user if provided
+      metadata: metadata,              // Additional metadata
+    }
 
     const upstream = await axios.post(
       'https://litellm-production-6380.up.railway.app/key/generate',
