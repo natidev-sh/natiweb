@@ -63,6 +63,8 @@ import NatiVsBolt from './pages/compare/NatiVsBolt.jsx'
 import NatiVsCursor from './pages/compare/NatiVsCursor.jsx'
 import Integrations from './pages/Integrations.jsx'
 import Playground from './pages/Playground.jsx'
+import SupabaseOAuth from './pages/SupabaseOAuth.jsx'
+import SupabaseOAuthCallback from './pages/SupabaseOAuthCallback.jsx'
 import { Analytics } from "@vercel/analytics/react" // Corrected import for React
 
 export default function App() {
@@ -116,6 +118,8 @@ export default function App() {
             <Route path="/compare/cursor" element={<NatiVsCursor />} />
             <Route path="/integrations" element={<Integrations />} />
             <Route path="/playground" element={<Playground />} />
+            <Route path="/supabase-oauth/login" element={<SupabaseOAuth />} />
+            <Route path="/supabase-oauth/callback" element={<SupabaseOAuthCallback />} />
             <Route path="/invite/:token" element={<AcceptInvite />} />
             
             {/* Legal Pages */}
