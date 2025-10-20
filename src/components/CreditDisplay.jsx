@@ -18,18 +18,24 @@ export default function CreditDisplay({ compact = false }) {
     setLoading(true)
     setError(null)
     
-    const { data, error: fetchError } = await supabase.functions.invoke('get-user-credits')
+    try {
+      const { data, error: fetchError } = await supabase.functions.invoke('get-user-credits')
 
-    if (fetchError) {
-      console.error('Error fetching credits:', fetchError)
-      setError(fetchError.message)
-    } else if (data?.error) {
-      setError(data.error)
-    } else if (data) {
-      setCredits(data)
+      if (fetchError) {
+        console.error('Error fetching credits:', fetchError)
+        setError(fetchError.message || 'Failed to fetch credits')
+      } else if (data?.error) {
+        console.error('Credits API error:', data)
+        setError(data.error)
+      } else if (data) {
+        setCredits(data)
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err)
+      setError('Failed to load credit information')
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   if (loading) {

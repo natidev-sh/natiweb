@@ -115,8 +115,9 @@ app.post('/api/key/generate', async (req, res) => {
     
     // Prepare payload with budget limits
     const body = {
-      max_budget: DEFAULT_MAX_BUDGET,  
+      max_budget: DEFAULT_MAX_BUDGET,  // Set budget limit (350 credits = $23.33)
       budget_duration: "30d",          // Reset every 30 days
+      budget_id: "Pro",                // Link to Pro budget in LiteLLM
       user_id: req.body?.user_id,      // Track user if provided
       metadata: metadata,              // Additional metadata
     }

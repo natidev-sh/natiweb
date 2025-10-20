@@ -19,23 +19,31 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting get-user-credits function')
+    
     if (!LITELLM_MASTER_KEY) {
+      console.error('LITELLM_MASTER_KEY not found in environment')
       throw new Error('Missing LITELLM_MASTER_KEY environment variable.')
     }
 
+    console.log('Creating Supabase client')
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     )
 
+    console.log('Getting authenticated user')
     const { data: { user } } = await supabaseClient.auth.getUser()
     if (!user) {
+      console.error('No authenticated user found')
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+    
+    console.log('User authenticated:', user.id)
 
     // Get user's API key from database
     const { data: apiKeyData, error: apiKeyError } = await supabaseClient
@@ -56,6 +64,8 @@ serve(async (req) => {
       })
     }
 
+    console.log('Fetching credit info from LiteLLM for key:', apiKeyData.api_key.substring(0, 10) + '...')
+    
     // Fetch credit info from LiteLLM
     const liteLLMResponse = await fetch(LITELLM_API_URL, {
       method: 'GET',
@@ -67,27 +77,49 @@ serve(async (req) => {
 
     if (!liteLLMResponse.ok) {
       const errorData = await liteLLMResponse.json()
+      console.error('LiteLLM error response:', errorData)
       throw new Error(errorData.error || 'Failed to fetch credit info from LiteLLM')
     }
 
     const creditData = await liteLLMResponse.json()
-    const userInfo = creditData.user_info
+    console.log('LiteLLM response:', JSON.stringify(creditData, null, 2))
+    
+    // LiteLLM returns budget data in the keys array, not user_info
+    const keys = creditData.keys || []
+    const firstKey = keys.find((k: any) => k.token === apiKeyData.api_key) || keys[0]
+    
+    if (!firstKey) {
+      throw new Error('No key data found in LiteLLM response')
+    }
+    
+    // Get data from the key object
+    const maxBudget = firstKey.max_budget ?? 0
+    const spend = firstKey.spend ?? 0
+    const budgetResetAt = firstKey.budget_reset_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
+    console.log('Parsed values:', { maxBudget, spend, budgetResetAt })
 
     // Convert LiteLLM dollars to credits (matching desktop app)
     const response = {
-      usedCredits: Math.round(userInfo.spend * CONVERSION_RATIO),
-      totalCredits: Math.round(userInfo.max_budget * CONVERSION_RATIO),
-      remainingCredits: Math.round((userInfo.max_budget - userInfo.spend) * CONVERSION_RATIO),
-      budgetResetDate: userInfo.budget_reset_at,
+      usedCredits: Math.round(spend * CONVERSION_RATIO),
+      totalCredits: Math.round(maxBudget * CONVERSION_RATIO),
+      remainingCredits: Math.round((maxBudget - spend) * CONVERSION_RATIO),
+      budgetResetDate: budgetResetAt,
       hasKey: true
     }
+
+    console.log('Returning credit data:', response)
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Error in get-user-credits:', error)
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Unknown error',
+      details: error.toString()
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     })

@@ -45,6 +45,7 @@ serve(async (req) => {
     const liteLLMPayload = {
       max_budget: DEFAULT_MAX_BUDGET,  // Set budget limit (350 credits = $23.33)
       budget_duration: "30d",          // Reset every 30 days
+      budget_id: "Pro",                // Link to Pro budget in LiteLLM
       user_id: user.id,                // Track user
       metadata: metadata,              // Additional metadata
     }
