@@ -22,6 +22,7 @@ import ProtectedRoute from './auth/ProtectedRoute.jsx'
 import OnboardingProfile from './pages/onboarding/OnboardingProfile.jsx'
 import OnboardingPricing from './pages/onboarding/OnboardingPricing.jsx'
 import AdminCategories from './pages/admin/AdminCategories.jsx'
+import AdminDownloadLinks from './pages/admin/AdminDownloadLinks.jsx'
 import AdminSiteSettings from './pages/admin/AdminSiteSettings.jsx'
 import WaitlistPage from './pages/Waitlist.jsx'
 import SiteStatusHandler from './components/SiteStatusHandler.jsx'
@@ -148,6 +149,7 @@ export default function App() {
               <Route path="posts/new" element={<PostEditor />} />
               <Route path="posts/edit/:slug" element={<PostEditor />} />
               <Route path="categories" element={<AdminCategories />} />
+              <Route path="downloads" element={<AdminDownloadLinks />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="users/:userId" element={<AdminUserDetails />} />
               <Route path="teams" element={<AdminTeams />} />

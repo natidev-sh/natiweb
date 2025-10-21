@@ -1,5 +1,5 @@
-import React from 'react';
-import { Download, Laptop, Apple, Terminal, Github } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, Laptop, Apple, Terminal, Github, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext.jsx';
@@ -7,6 +7,7 @@ import FooterGlow from './components/FooterGlow';
 import BentoGrid1 from './sections/BentoGrid1.jsx';
 import CongestedPricing from './components/mvpblocks/congusted-pricing.tsx';
 import PageMeta from './components/PageMeta.jsx';
+import { supabase } from './integrations/supabase/client';
 
 const PlatformCard = ({ icon, title, version, downloadLink, comingSoon = false }) => {
   const cardVariants = {
@@ -64,9 +65,22 @@ const PlatformCard = ({ icon, title, version, downloadLink, comingSoon = false }
   );
 };
 
+const platformIcons = {
+  windows: Laptop,
+  macos: Apple,
+  linux: Terminal,
+};
+
+const platformNames = {
+  windows: 'Windows',
+  macos: 'macOS',
+  linux: 'Linux',
+};
+
 export default function DownloadPage() {
   const { token } = useAuth();
-  const windowsDownloadLink = "https://github.com/natidev-sh/nati/releases/download/v0.2.2/Nati-0.2.2.Setup.exe";
+  const [downloadLinks, setDownloadLinks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -75,6 +89,37 @@ export default function DownloadPage() {
       transition: { staggerChildren: 0.15, delayChildren: 0.2 },
     },
   };
+
+  useEffect(() => {
+    fetchDownloadLinks();
+  }, []);
+
+  async function fetchDownloadLinks() {
+    try {
+      const { data, error } = await supabase
+        .from('download_links')
+        .select('*')
+        .order('platform');
+
+      if (error) throw error;
+      setDownloadLinks(data || []);
+    } catch (error) {
+      console.error('Error fetching download links:', error);
+      // Fallback to default
+      setDownloadLinks([
+        {
+          platform: 'windows',
+          version: '0.2.2',
+          download_url: 'https://github.com/natidev-sh/nati/releases/download/v0.2.2/Nati-0.2.2.Setup.exe',
+          is_available: true,
+        },
+        { platform: 'macos', version: 'Coming Soon', download_url: '#', is_available: false },
+        { platform: 'linux', version: 'Coming Soon', download_url: '#', is_available: false },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <>
@@ -99,29 +144,32 @@ export default function DownloadPage() {
           </p>
         </motion.div>
         
-        <motion.div
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <PlatformCard
-            icon={<Laptop className="h-7 w-7" />}
-            title="Nati for Windows"
-            version="Version 0.2.2"
-            downloadLink={windowsDownloadLink}
-          />
-          <PlatformCard
-            icon={<Apple className="h-7 w-7" />}
-            title="Nati for macOS"
-            comingSoon
-          />
-          <PlatformCard
-            icon={<Terminal className="h-7 w-7" />}
-            title="Nati for Linux"
-            comingSoon
-          />
-        </motion.div>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-[var(--primary)]" />
+          </div>
+        ) : (
+          <motion.div
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {downloadLinks.map((link) => {
+              const Icon = platformIcons[link.platform];
+              return (
+                <PlatformCard
+                  key={link.platform}
+                  icon={<Icon className="h-7 w-7" />}
+                  title={`Nati for ${platformNames[link.platform]}`}
+                  version={link.is_available ? `Version ${link.version}` : link.version}
+                  downloadLink={link.download_url}
+                  comingSoon={!link.is_available}
+                />
+              );
+            })}
+          </motion.div>
+        )}
         
         {!token && (
           <motion.div
