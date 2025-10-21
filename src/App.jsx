@@ -6,6 +6,7 @@ import Signup from './Signup.jsx'
 import Dashboard from './Dashboard.jsx'
 import ConfirmEmail from './ConfirmEmail.jsx'
 import Download from './Download.jsx'
+import DownloadModern from './DownloadModern.jsx'
 import Header2 from './components/Header2.jsx'
 import PaymentSuccess from './PaymentSuccess.jsx'
 import PaymentCancel from './PaymentCancel.jsx'
@@ -22,6 +23,8 @@ import ProtectedRoute from './auth/ProtectedRoute.jsx'
 import OnboardingProfile from './pages/onboarding/OnboardingProfile.jsx'
 import OnboardingPricing from './pages/onboarding/OnboardingPricing.jsx'
 import AdminCategories from './pages/admin/AdminCategories.jsx'
+import AdminDownloadLinks from './pages/admin/AdminDownloadLinks.jsx'
+import AdminReleases from './pages/admin/AdminReleases.jsx'
 import AdminSiteSettings from './pages/admin/AdminSiteSettings.jsx'
 import WaitlistPage from './pages/Waitlist.jsx'
 import SiteStatusHandler from './components/SiteStatusHandler.jsx'
@@ -95,7 +98,7 @@ export default function App() {
             <Route path="/desktop-auth" element={<DesktopAppAuth />} />
             <Route path="/verify-2fa" element={<Verify2FA />} />
             <Route path="/confirm-email" element={<ConfirmEmail />} />
-            <Route path="/download" element={<Download />} />
+            <Route path="/download" element={<DownloadModern />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/compare" element={<ComparisonPage />} />
             <Route path="/docs" element={<DocsLayoutFumadocsReal />}>
@@ -148,6 +151,8 @@ export default function App() {
               <Route path="posts/new" element={<PostEditor />} />
               <Route path="posts/edit/:slug" element={<PostEditor />} />
               <Route path="categories" element={<AdminCategories />} />
+              <Route path="releases" element={<AdminReleases />} />
+              <Route path="downloads" element={<AdminDownloadLinks />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="users/:userId" element={<AdminUserDetails />} />
               <Route path="teams" element={<AdminTeams />} />

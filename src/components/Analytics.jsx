@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '../auth/AuthContext.jsx'
-import { TrendingUp, Zap, DollarSign, Activity, BarChart3, Clock, ArrowUp, ArrowDown, Sparkles } from 'lucide-react'
+import { TrendingUp, Zap, DollarSign, Activity, BarChart3, Clock, ArrowUp, ArrowDown, Sparkles, Calendar, X } from 'lucide-react'
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 export default function Analytics() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0]
+  })
+  const [tempDateRange, setTempDateRange] = useState(dateRange)
   const [analytics, setAnalytics] = useState({
     totalTokens: 0,
     totalCost: 0,
@@ -15,6 +21,7 @@ export default function Analytics() {
     modelBreakdown: [],
     dailyUsage: [],
     topProjects: [],
+    providers: [],
     trends: {
       tokensTrend: 0,
       costTrend: 0,
@@ -25,35 +32,43 @@ export default function Analytics() {
 
   useEffect(() => {
     fetchAnalytics()
-  }, [])
+  }, [dateRange])
 
   async function fetchAnalytics() {
     setLoading(true)
     try {
       if (!user) return
 
-      // Fetch current month data
-      const now = new Date()
-      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
+      // Use selected date range
+      const startDate = new Date(dateRange.startDate)
+      startDate.setHours(0, 0, 0, 0)
+      const endDate = new Date(dateRange.endDate)
+      endDate.setHours(23, 59, 59, 999)
 
-      // Fetch all API usage data for current month
+      // Calculate previous period for comparison (same length as selected range)
+      const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
+      const previousStart = new Date(startDate)
+      previousStart.setDate(previousStart.getDate() - daysDiff)
+      const previousEnd = new Date(startDate)
+      previousEnd.setSeconds(previousEnd.getSeconds() - 1)
+
+      // Fetch all API usage data for selected period
       const { data: allUsage, error: usageError } = await supabase
         .from('api_usage')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'success')
-        .gte('created_at', currentMonthStart.toISOString())
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString())
 
-      // Fetch previous month data for comparison
+      // Fetch previous period data for comparison
       const { data: lastMonthUsage } = await supabase
         .from('api_usage')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'success')
-        .gte('created_at', lastMonthStart.toISOString())
-        .lte('created_at', lastMonthEnd.toISOString())
+        .gte('created_at', previousStart.toISOString())
+        .lte('created_at', previousEnd.toISOString())
 
       if (usageError) {
         console.error('Error fetching API usage:', usageError)
@@ -61,7 +76,7 @@ export default function Analytics() {
         throw usageError
       }
 
-      // Calculate stats manually for current month
+      // Calculate stats manually for selected period
       const overallStats = {
         total_tokens: allUsage?.reduce((sum, row) => sum + (row.total_tokens || 0), 0) || 0,
         total_cost: allUsage?.reduce((sum, row) => sum + (parseFloat(row.cost) || 0), 0) || 0,
@@ -71,7 +86,7 @@ export default function Analytics() {
           : 0
       }
 
-      // Calculate last month stats for comparison
+      // Calculate previous period stats for comparison
       const lastMonthStats = {
         total_tokens: lastMonthUsage?.reduce((sum, row) => sum + (row.total_tokens || 0), 0) || 0,
         total_cost: lastMonthUsage?.reduce((sum, row) => sum + (parseFloat(row.cost) || 0), 0) || 0,
@@ -94,21 +109,42 @@ export default function Analytics() {
         responseTrend: -calculateTrend(overallStats.avg_response_time, lastMonthStats.avg_response_time) // Negative because lower is better
       }
 
-      // Calculate daily usage from allUsage data
+      // Helper function to get provider name from model (defined before use)
+      const getProviderFromModel = (modelName) => {
+        const lowerModel = modelName.toLowerCase()
+        if (lowerModel.includes('gpt') || lowerModel.includes('openai')) return 'OpenAI'
+        if (lowerModel.includes('claude') || lowerModel.includes('anthropic')) return 'Anthropic'
+        if (lowerModel.includes('gemini') || lowerModel.includes('google')) return 'Google'
+        if (lowerModel.includes('llama') || lowerModel.includes('ollama')) return 'Ollama'
+        if (lowerModel.includes('turbo')) return 'Nati'
+        return 'Other'
+      }
+
+      // Calculate daily usage from allUsage data with provider breakdown
       const dailyMap = {}
       allUsage?.forEach(row => {
         const date = new Date(row.created_at).toDateString()
         if (!dailyMap[date]) {
-          dailyMap[date] = { tokens: 0, cost: 0, requests: 0 }
+          dailyMap[date] = { tokens: 0, cost: 0, requests: 0, byProvider: {} }
         }
         dailyMap[date].tokens += row.total_tokens || 0
         dailyMap[date].cost += parseFloat(row.cost) || 0
         dailyMap[date].requests += 1
+        
+        // Track tokens per provider
+        const provider = getProviderFromModel(row.model)
+        if (!dailyMap[date].byProvider[provider]) {
+          dailyMap[date].byProvider[provider] = 0
+        }
+        dailyMap[date].byProvider[provider] += row.total_tokens || 0
       })
 
       const dailyData = Object.entries(dailyMap).map(([date, data]) => ({
         date: new Date(date),
-        ...data
+        tokens: data.tokens,
+        cost: data.cost,
+        requests: data.requests,
+        ...data.byProvider // Spread provider-specific data
       })).sort((a, b) => a.date - b.date)
 
       // Model breakdown from allUsage
@@ -187,13 +223,28 @@ export default function Analytics() {
         projectBreakdown[row.project_name].requests += 1
       })
 
-      // Convert daily data to format for UI
+      // Convert daily data to format for UI (keep chronological order - oldest to newest)
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-      const formattedDaily = (dailyData || []).map(day => ({
-        date: days[new Date(day.date).getDay()],
-        tokens: parseInt(day.tokens) || 0,
-        cost: parseFloat(day.cost) || 0
-      })).reverse()
+      const formattedDaily = (dailyData || []).map(day => {
+        const dayData = {
+          date: days[new Date(day.date).getDay()],
+          tokens: parseInt(day.tokens) || 0,
+          cost: parseFloat(day.cost) || 0
+        }
+        // Add provider-specific data
+        Object.keys(day).forEach(key => {
+          if (!['date', 'tokens', 'cost', 'requests'].includes(key)) {
+            dayData[key] = day[key]
+          }
+        })
+        return dayData
+      })
+      
+      // Get unique providers for the graph
+      const uniqueProviders = new Set()
+      allUsage?.forEach(row => {
+        uniqueProviders.add(getProviderFromModel(row.model))
+      })
 
       setAnalytics({
         totalTokens: parseInt(overallStats.total_tokens) || 0,
@@ -203,7 +254,8 @@ export default function Analytics() {
         modelBreakdown: Object.values(modelBreakdown).sort((a, b) => b.tokens - a.tokens),
         dailyUsage: formattedDaily,
         topProjects: Object.values(projectBreakdown).sort((a, b) => b.tokens - a.tokens).slice(0, 5),
-        trends
+        trends,
+        providers: Array.from(uniqueProviders)
       })
     } catch (error) {
       console.error('Error fetching analytics:', error)
@@ -216,6 +268,7 @@ export default function Analytics() {
         modelBreakdown: [],
         dailyUsage: [],
         topProjects: [],
+        providers: [],
         trends: {
           tokensTrend: 0,
           costTrend: 0,
@@ -253,6 +306,63 @@ export default function Analytics() {
     </div>
   )
 
+  const handlePresetSelect = (preset) => {
+    const now = new Date()
+    let startDate, endDate = new Date()
+    
+    switch(preset) {
+      case '24h':
+        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        break
+      case '7d':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case '30d':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        break
+      case '90d':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        break
+      case 'thisMonth':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        break
+      case 'lastMonth':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+        endDate = new Date(now.getFullYear(), now.getMonth(), 0)
+        break
+      case 'thisYear':
+        startDate = new Date(now.getFullYear(), 0, 1)
+        break
+      default:
+        return
+    }
+    
+    const newRange = {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    }
+    
+    setTempDateRange(newRange)
+    setDateRange(newRange)
+    setIsDatePickerOpen(false)
+  }
+
+  const handleApplyDateRange = () => {
+    setDateRange(tempDateRange)
+    setIsDatePickerOpen(false)
+  }
+
+  const handleCancelDateRange = () => {
+    setTempDateRange(dateRange)
+    setIsDatePickerOpen(false)
+  }
+
+  const formatDateRange = () => {
+    const start = new Date(dateRange.startDate)
+    const end = new Date(dateRange.endDate)
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -269,6 +379,157 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6">
+      {/* Date Range Picker Button */}
+      <div className="flex items-center justify-between relative">
+        <div>
+          <h2 className="text-xl font-semibold">Analytics Overview</h2>
+          <p className="text-sm text-[var(--muted-foreground)] mt-1">{formatDateRange()}</p>
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--muted)] transition-colors"
+          >
+            <Calendar className="h-4 w-4" />
+            <span className="text-sm font-medium">Change Date Range</span>
+          </button>
+          
+          {/* Modern Date Range Picker Dropdown */}
+          {isDatePickerOpen && (
+            <>
+              {/* Backdrop */}
+              <div className="fixed inset-0 z-40" onClick={handleCancelDateRange} />
+              
+              {/* Dropdown Panel */}
+              <div className="absolute right-0 top-full mt-2 z-50 bg-[var(--background)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 duration-200" style={{width: '700px'}}>
+            <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
+              <div>
+                <h3 className="text-xl font-semibold">Select Date Range</h3>
+                <p className="text-sm text-[var(--muted-foreground)] mt-1">Choose a preset or pick custom dates</p>
+              </div>
+              <button
+                onClick={handleCancelDateRange}
+                className="h-10 w-10 rounded-lg hover:bg-[var(--muted)] flex items-center justify-center transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex">
+              {/* Quick Presets Sidebar */}
+              <div className="w-48 p-4 border-r border-[var(--border)] bg-[var(--background-darkest)]">
+                <h4 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-3">Quick Select</h4>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => handlePresetSelect('24h')}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--muted)] transition-colors"
+                  >
+                    Last 24 hours
+                  </button>
+                  <button
+                    onClick={() => handlePresetSelect('7d')}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--muted)] transition-colors"
+                  >
+                    Last 7 days
+                  </button>
+                  <button
+                    onClick={() => handlePresetSelect('30d')}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--muted)] transition-colors"
+                  >
+                    Last 30 days
+                  </button>
+                  <button
+                    onClick={() => handlePresetSelect('90d')}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--muted)] transition-colors"
+                  >
+                    Last 90 days
+                  </button>
+                  <button
+                    onClick={() => handlePresetSelect('thisMonth')}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--muted)] transition-colors"
+                  >
+                    This month
+                  </button>
+                  <button
+                    onClick={() => handlePresetSelect('lastMonth')}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--muted)] transition-colors"
+                  >
+                    Last month
+                  </button>
+                  <button
+                    onClick={() => handlePresetSelect('thisYear')}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--muted)] transition-colors"
+                  >
+                    This year
+                  </button>
+                </div>
+              </div>
+              
+              {/* Custom Date Picker */}
+              <div className="flex-1 p-6">
+                <h4 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-4">Custom Range</h4>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Start Date</label>
+                    <input
+                      type="date"
+                      value={tempDateRange.startDate}
+                      onChange={(e) => setTempDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                      max={tempDateRange.endDate}
+                      className="w-full px-4 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-shadow"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">End Date</label>
+                    <input
+                      type="date"
+                      value={tempDateRange.endDate}
+                      onChange={(e) => setTempDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                      min={tempDateRange.startDate}
+                      max={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-2.5 rounded-lg border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-shadow"
+                    />
+                  </div>
+                </div>
+                
+                {/* Selected Range Preview */}
+                <div className="mt-6 p-4 rounded-lg bg-[var(--muted)] border border-[var(--border)]">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-[var(--muted-foreground)]" />
+                    <span className="font-medium">Selected Range:</span>
+                    <span className="text-[var(--muted-foreground)]">
+                      {new Date(tempDateRange.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {' '}-{' '}
+                      {new Date(tempDateRange.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                    <span className="ml-auto text-[var(--muted-foreground)]">
+                      ({Math.ceil((new Date(tempDateRange.endDate) - new Date(tempDateRange.startDate)) / (1000 * 60 * 60 * 24)) + 1} days)
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleCancelDateRange}
+                    className="flex-1 px-4 py-2.5 rounded-lg border border-[var(--border)] hover:bg-[var(--muted)] transition-colors text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleApplyDateRange}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-[var(--primary)] to-purple-600 text-white hover:opacity-90 transition-opacity text-sm font-medium shadow-md"
+                  >
+                    Apply Range
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+              </>
+            )}
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -281,21 +542,21 @@ export default function Analytics() {
                 : analytics.totalTokens.toString()
           }
           icon={Zap}
-          subtitle="this month"
+          subtitle="selected period"
           trend={analytics.trends.tokensTrend}
         />
         <StatCard
           title="Total Cost"
           value={`$${analytics.totalCost.toFixed(2)}`}
           icon={DollarSign}
-          subtitle="this month"
+          subtitle="selected period"
           trend={analytics.trends.costTrend}
         />
         <StatCard
           title="API Requests"
           value={analytics.totalRequests.toLocaleString()}
           icon={Activity}
-          subtitle="this month"
+          subtitle="selected period"
           trend={analytics.trends.requestsTrend}
         />
         <StatCard
@@ -311,20 +572,40 @@ export default function Analytics() {
       <div className="p-6 rounded-lg border border-[var(--border)] bg-[var(--background-darkest)]">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold">Token Usage This Week</h3>
-            <p className="text-sm text-[var(--muted-foreground)]">Daily breakdown of token consumption</p>
+            <h3 className="text-lg font-semibold">Token Usage Over Time</h3>
+            <p className="text-sm text-[var(--muted-foreground)]">Daily breakdown by AI provider</p>
           </div>
           <BarChart3 className="h-5 w-5 text-[var(--muted-foreground)]" />
         </div>
         
-        {/* Modern Recharts Graph */}
+        {/* Modern Recharts Graph with per-provider lines */}
         <div className="h-72 mb-4">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={analytics.dailyUsage}>
               <defs>
-                <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="colorOpenAI" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorAnthropic" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorGoogle" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorOllama" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6b7280" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#6b7280" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorNati" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorOther" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -344,16 +625,74 @@ export default function Analytics() {
                   border: '1px solid var(--border)',
                   borderRadius: '8px'
                 }}
-                formatter={(value) => [`${(value / 1000).toFixed(1)}K tokens`, 'Tokens']}
+                formatter={(value, name) => [`${(value / 1000).toFixed(1)}K tokens`, name]}
               />
-              <Area 
-                type="monotone" 
-                dataKey="tokens" 
-                stroke="#3b82f6" 
-                strokeWidth={3}
-                fill="url(#colorTokens)"
-                animationDuration={1000}
-              />
+              {analytics.providers?.includes('OpenAI') && (
+                <Area 
+                  type="monotone" 
+                  dataKey="OpenAI" 
+                  name="OpenAI"
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  fill="url(#colorOpenAI)"
+                  animationDuration={1000}
+                />
+              )}
+              {analytics.providers?.includes('Anthropic') && (
+                <Area 
+                  type="monotone" 
+                  dataKey="Anthropic" 
+                  name="Anthropic"
+                  stroke="#f97316" 
+                  strokeWidth={2}
+                  fill="url(#colorAnthropic)"
+                  animationDuration={1000}
+                />
+              )}
+              {analytics.providers?.includes('Google') && (
+                <Area 
+                  type="monotone" 
+                  dataKey="Google" 
+                  name="Google"
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  fill="url(#colorGoogle)"
+                  animationDuration={1000}
+                />
+              )}
+              {analytics.providers?.includes('Ollama') && (
+                <Area 
+                  type="monotone" 
+                  dataKey="Ollama" 
+                  name="Ollama"
+                  stroke="#6b7280" 
+                  strokeWidth={2}
+                  fill="url(#colorOllama)"
+                  animationDuration={1000}
+                />
+              )}
+              {analytics.providers?.includes('Nati') && (
+                <Area 
+                  type="monotone" 
+                  dataKey="Nati" 
+                  name="Nati"
+                  stroke="#a855f7" 
+                  strokeWidth={2}
+                  fill="url(#colorNati)"
+                  animationDuration={1000}
+                />
+              )}
+              {analytics.providers?.includes('Other') && (
+                <Area 
+                  type="monotone" 
+                  dataKey="Other" 
+                  name="Other"
+                  stroke="#8b5cf6" 
+                  strokeWidth={2}
+                  fill="url(#colorOther)"
+                  animationDuration={1000}
+                />
+              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>

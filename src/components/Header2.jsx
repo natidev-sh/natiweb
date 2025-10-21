@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, ArrowRight, Zap, Shield, Sun, Moon, ChevronDown, Users, LayoutDashboard, Plus, Crown, Terminal } from 'lucide-react'
+import { Menu, X, ArrowRight, Zap, Shield, Sun, Moon, ChevronDown, Users, LayoutDashboard, Plus, Crown, Terminal, LogOut } from 'lucide-react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthContext.jsx'
 import { useAdmin } from '@/hooks/useAdmin'
@@ -364,11 +364,22 @@ export default function Header2() {
                               </div>
                             )}
                           </div>
+                          
+                          <div className="my-2 h-px bg-[var(--border)]" />
+                          <button
+                            onClick={() => {
+                              logout()
+                              setIsDashboardDropdownOpen(false)
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-left transition-colors hover:bg-[var(--muted)] text-red-600 dark:text-red-400"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            <span>Logout</span>
+                          </button>
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}><button onClick={logout} className="inline-flex items-center space-x-2 rounded-lg bg-[var(--foreground)] px-5 py-2.5 text-sm font-medium text-[var(--background)] shadow-sm transition-all duration-200 hover:bg-[var(--foreground)]/90"><span>Logout</span></button></motion.div>
                 </>
               ) : (
                 <>
