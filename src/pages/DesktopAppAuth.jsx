@@ -14,6 +14,7 @@ export default function DesktopAppAuth() {
   const [error, setError] = useState('')
   const [isAuthenticating, setIsAuthenticating] = useState(false)
   const [showAppNotInstalled, setShowAppNotInstalled] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [deepLinkUrl, setDeepLinkUrl] = useState('')
 
   const redirectUrl = searchParams.get('redirect') || 'nati://nati-auth-return'
@@ -99,16 +100,21 @@ export default function DesktopAppAuth() {
       // Attempt to redirect to the desktop app
       window.location.href = deepLink
       
-      // Check after 5 seconds if app opened
+      // Show success message after 1.5 seconds
       setTimeout(() => {
         document.removeEventListener('visibilitychange', handleVisibilityChange)
         window.removeEventListener('blur', handleBlur)
         
-        // Only show "not installed" if page is still focused
-        if (!appOpened && !document.hidden) {
-          setShowAppNotInstalled(true)
+        // Show success state
+        setShowSuccess(true)
+      }, 1500)
+      
+      // Auto-close after 10 seconds if window is still open
+      setTimeout(() => {
+        if (!document.hidden) {
+          window.close()
         }
-      }, 5000)
+      }, 10000)
     } catch (e) {
       console.error('Auth error:', e)
       setError('Failed to authenticate with desktop app')
@@ -223,16 +229,16 @@ export default function DesktopAppAuth() {
                   </button>
                 </div>
               </div>
-            ) : (
+            ) : showSuccess ? (
               <div className="space-y-4">
-                {/* Loading Card */}
-                <div className="p-6 rounded-lg border border-blue-500/20 bg-blue-500/5">
+                {/* Success Card */}
+                <div className="p-6 rounded-lg border border-green-500/20 bg-green-500/5">
                   <div className="flex items-center gap-3">
-                    <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                    <CheckCircle className="h-5 w-5 text-green-500" />
                     <div className="space-y-1">
-                      <p className="text-sm font-medium">Launching desktop app...</p>
+                      <p className="text-sm font-medium">Desktop app opened!</p>
                       <p className="text-xs text-[var(--muted-foreground)]">
-                        This window will close automatically
+                        You can close this window now
                       </p>
                     </div>
                   </div>
@@ -242,17 +248,29 @@ export default function DesktopAppAuth() {
                   onClick={() => window.location.href = deepLinkUrl}
                   className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
                 >
-                  Open Nati Manually
+                  Open Nati Again
                 </button>
-                <p className="text-xs text-center text-[var(--muted-foreground)]">
-                  If the app doesn't open automatically, click the button above
-                </p>
                 <button
                   onClick={() => window.close()}
                   className="w-full px-4 py-3 text-sm font-medium rounded-lg border border-[var(--border)] hover:bg-[var(--muted)] transition-colors"
                 >
                   Close this tab
                 </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Loading Card */}
+                <div className="p-6 rounded-lg border border-blue-500/20 bg-blue-500/5">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Launching desktop app...</p>
+                      <p className="text-xs text-[var(--muted-foreground)]">
+                        Please wait a moment
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
