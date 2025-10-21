@@ -53,6 +53,9 @@ export default function SupabaseOAuthCallback() {
         
         setStatus('success')
         
+        // Store deep link for manual opening
+        window.natiDeepLink = deepLink.toString()
+        
         // Redirect to app after a brief delay
         setTimeout(() => {
           window.location.href = deepLink.toString()
@@ -97,10 +100,19 @@ export default function SupabaseOAuthCallback() {
                 <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
                   Redirecting you back to Nati...
                 </p>
-                <div className="flex items-center justify-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="flex items-center justify-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 mb-6">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Opening Nati app</span>
                 </div>
+                <button
+                  onClick={() => window.location.href = window.natiDeepLink}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl"
+                >
+                  Open Nati Manually
+                </button>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3">
+                  If the app doesn't open automatically, click the button above
+                </p>
               </>
             )}
 
