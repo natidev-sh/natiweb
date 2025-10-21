@@ -27,11 +27,13 @@ export default function SupabaseOAuthCallback() {
 
       try {
         // Exchange code for tokens via your backend (Supabase Edge Function)
+        const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2c3FpeWpmcXZkcHRqbnhlZmJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwNDU5NTYsImV4cCI6MjA3NTYyMTk1Nn0.uc-wEsnkKtZjscmmJUIJ64qZJXGHQpp8cYwjEhWBivo'
         const response = await fetch('https://cvsqiyjfqvdptjnxefbk.supabase.co/functions/v1/supabase-oauth-exchange', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2c3FpeWpmcXZkcHRqbnhlZmJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwNDU5NTYsImV4cCI6MjA3NTYyMTk1Nn0.uc-wEsnkKtZjscmmJUIJ64qZJXGHQpp8cYwjEhWBivo'
+            'Authorization': `Bearer ${anonKey}`,
+            'apikey': anonKey
           },
           body: JSON.stringify({ code })
         })
