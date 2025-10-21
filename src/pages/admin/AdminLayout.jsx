@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Users, Settings, ChevronDown, ExternalLink, Palette, Mail, Send, Tag, Ticket, Download } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Settings, ChevronDown, ExternalLink, Palette, Mail, Send, Tag, Ticket, Download, Rocket } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FooterGlow from '@/components/FooterGlow';
 
@@ -12,7 +12,7 @@ const adminNavItems = [
     children: [
       { name: 'Posts', href: '/admin/posts' },
       { name: 'Categories', href: '/admin/categories' },
-      { name: 'Download Links', href: '/admin/downloads', icon: Download },
+      { name: 'Releases', href: '/admin/releases', icon: Rocket },
     ],
   },
   {
