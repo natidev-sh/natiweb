@@ -14,8 +14,9 @@ export default function DesktopAppAuth() {
   const [error, setError] = useState('')
   const [isAuthenticating, setIsAuthenticating] = useState(false)
   const [showAppNotInstalled, setShowAppNotInstalled] = useState(false)
+  const [deepLinkUrl, setDeepLinkUrl] = useState('')
 
-  const redirectUrl = searchParams.get('redirect') || 'dyad://nati-auth-return'
+  const redirectUrl = searchParams.get('redirect') || 'nati://nati-auth-return'
 
   // Check if user is already logged in
   useEffect(() => {
@@ -74,7 +75,8 @@ export default function DesktopAppAuth() {
         isAdmin: isAdmin.toString(),
       })
       
-      const deepLinkUrl = `${redirectUrl}?${params.toString()}`
+      const deepLink = `${redirectUrl}?${params.toString()}`
+      setDeepLinkUrl(deepLink)
       
       // Better app detection logic
       let appOpened = false
@@ -95,7 +97,7 @@ export default function DesktopAppAuth() {
       window.addEventListener('blur', handleBlur)
       
       // Attempt to redirect to the desktop app
-      window.location.href = deepLinkUrl
+      window.location.href = deepLink
       
       // Check after 5 seconds if app opened
       setTimeout(() => {
@@ -236,6 +238,15 @@ export default function DesktopAppAuth() {
                   </div>
                 </div>
 
+                <button
+                  onClick={() => window.location.href = deepLinkUrl}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+                >
+                  Open Nati Manually
+                </button>
+                <p className="text-xs text-center text-[var(--muted-foreground)]">
+                  If the app doesn't open automatically, click the button above
+                </p>
                 <button
                   onClick={() => window.close()}
                   className="w-full px-4 py-3 text-sm font-medium rounded-lg border border-[var(--border)] hover:bg-[var(--muted)] transition-colors"

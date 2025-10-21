@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/supabase-oauth/:path*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
