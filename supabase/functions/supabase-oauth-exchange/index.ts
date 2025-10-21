@@ -16,11 +16,17 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting token exchange...')
+    
     if (!SUPABASE_CLIENT_SECRET) {
+      console.error('NATI_SUPABASE_CLIENT_SECRET is not set!')
       throw new Error('NATI_SUPABASE_CLIENT_SECRET not configured')
     }
+    
+    console.log('Environment variable found, client secret length:', SUPABASE_CLIENT_SECRET.length)
 
     const { code } = await req.json()
+    console.log('Received authorization code:', code ? 'YES' : 'NO')
     
     if (!code) {
       return new Response(JSON.stringify({ error: 'Authorization code is required' }), {
