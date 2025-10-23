@@ -16,6 +16,7 @@ interface LoginForm2Props {
   isSignup?: boolean;
   onSubmit?: (email: string, password: string, confirmPassword?: string) => void | Promise<void>;
   onGoogleSignIn?: () => void | Promise<void>;
+  onGithubSignIn?: () => void | Promise<void>;
   footerCta?: React.ReactNode;
 }
 
@@ -28,6 +29,7 @@ export default function LoginForm2({
   isSignup = false,
   onSubmit,
   onGoogleSignIn,
+  onGithubSignIn,
   footerCta,
 }: LoginForm2Props) {
   const [email, setEmail] = useState('')
@@ -252,29 +254,52 @@ export default function LoginForm2({
                   </div>
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.9, ease: 'easeOut' }}
-                  whileHover={{ scale: 1.02 }}
-                >
-                  <button
-                    type="button"
-                    onClick={onGoogleSignIn}
-                    aria-label="Sign in with Google"
-                    className="group w-full items-center justify-center rounded-xl border border-[var(--border)]/70 bg-[color:color-mix(in_oklab,_var(--background)_70%,_transparent)]/60 px-4 py-2 text-sm font-medium backdrop-blur-md transition-all hover:border-[var(--primary)]/40 hover:shadow-[0_14px_40px_-20px_var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
+                <div className="space-y-3">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.9, ease: 'easeOut' }}
+                    whileHover={{ scale: 1.02 }}
                   >
-                    <span className="pointer-events-none inline-flex items-center justify-center gap-2">
-                      <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
-                        <path fill="#EA4335" d="M24 9.5c3.73 0 6.34 1.61 7.8 2.96l5.32-5.2C33.97 4.2 29.41 2 24 2 14.88 2 6.98 7.34 3.38 15.02l6.83 5.29C11.62 14.4 17.29 9.5 24 9.5z"/>
-                        <path fill="#4285F4" d="M46.5 24.5c0-1.64-.15-3.2-.43-4.7H24v9h12.68c-.55 2.95-2.2 5.45-4.7 7.14l7.19 5.58C43.95 37.62 46.5 31.54 46.5 24.5z"/>
-                        <path fill="#FBBC05" d="M10.21 20.31l-6.83-5.29C1.8 17.74 1 21.26 1 24.99c0 3.67.78 7.15 2.27 10.23l6.94-5.39C9.4 28.19 9 26.64 9 25s.4-3.19 1.21-4.69z"/>
-                        <path fill="#34A853" d="M24 47c6.48 0 11.91-2.14 15.88-5.79l-7.19-5.58c-2.01 1.37-4.59 2.17-8.69 2.17-6.71 0-12.38-4.9-13.79-11.11l-6.94 5.39C6.88 40.53 14.79 47 24 47z"/>
-                      </svg>
-                      <span className="opacity-90 transition-colors group-hover:opacity-100">Sign in with Google</span>
-                    </span>
-                  </button>
-                </motion.div>
+                    <button
+                      type="button"
+                      onClick={onGoogleSignIn}
+                      aria-label="Sign in with Google"
+                      className="group w-full items-center justify-center rounded-xl border border-[var(--border)]/70 bg-[color:color-mix(in_oklab,_var(--background)_70%,_transparent)]/60 px-4 py-2 text-sm font-medium backdrop-blur-md transition-all hover:border-[var(--primary)]/40 hover:shadow-[0_14px_40px_-20px_var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
+                    >
+                      <span className="pointer-events-none inline-flex items-center justify-center gap-2">
+                        <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
+                          <path fill="#EA4335" d="M24 9.5c3.73 0 6.34 1.61 7.8 2.96l5.32-5.2C33.97 4.2 29.41 2 24 2 14.88 2 6.98 7.34 3.38 15.02l6.83 5.29C11.62 14.4 17.29 9.5 24 9.5z"/>
+                          <path fill="#4285F4" d="M46.5 24.5c0-1.64-.15-3.2-.43-4.7H24v9h12.68c-.55 2.95-2.2 5.45-4.7 7.14l7.19 5.58C43.95 37.62 46.5 31.54 46.5 24.5z"/>
+                          <path fill="#FBBC05" d="M10.21 20.31l-6.83-5.29C1.8 17.74 1 21.26 1 24.99c0 3.67.78 7.15 2.27 10.23l6.94-5.39C9.4 28.19 9 26.64 9 25s.4-3.19 1.21-4.69z"/>
+                          <path fill="#34A853" d="M24 47c6.48 0 11.91-2.14 15.88-5.79l-7.19-5.58c-2.01 1.37-4.59 2.17-8.69 2.17-6.71 0-12.38-4.9-13.79-11.11l-6.94 5.39C6.88 40.53 14.79 47 24 47z"/>
+                        </svg>
+                        <span className="opacity-90 transition-colors group-hover:opacity-100">Sign in with Google</span>
+                      </span>
+                    </button>
+                  </motion.div>
+
+                  {onGithubSignIn && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.95, ease: 'easeOut' }}
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <button
+                        type="button"
+                        onClick={onGithubSignIn}
+                        aria-label="Sign in with GitHub"
+                        className="group w-full items-center justify-center rounded-xl border border-[var(--border)]/70 bg-[color:color-mix(in_oklab,_var(--background)_70%,_transparent)]/60 px-4 py-2 text-sm font-medium backdrop-blur-md transition-all hover:border-[var(--primary)]/40 hover:shadow-[0_14px_40px_-20px_var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
+                      >
+                        <span className="pointer-events-none inline-flex items-center justify-center gap-2">
+                          <Github className="h-5 w-5" />
+                          <span className="opacity-90 transition-colors group-hover:opacity-100">Sign in with GitHub</span>
+                        </span>
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
 
                 <motion.p
                   className="mt-2 text-center text-xs opacity-70"

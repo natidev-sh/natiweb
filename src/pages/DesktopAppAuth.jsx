@@ -48,6 +48,26 @@ export default function DesktopAppAuth() {
       const isPro = profile?.subscription_status === 'active'
       const isAdmin = profile?.role === 'admin'
       
+      // Try to fetch GitHub provider token if user signed in with GitHub
+      let githubToken = ''
+      try {
+        // Get the user's identities to check if they have GitHub linked
+        const githubIdentity = user.identities?.find(identity => identity.provider === 'github')
+        
+        if (githubIdentity) {
+          // Fetch the provider token from Supabase
+          const { data: { session: currentSession } } = await supabase.auth.getSession()
+          
+          if (currentSession?.provider_token) {
+            githubToken = currentSession.provider_token
+            console.log('GitHub token found and will be synced to desktop app')
+          }
+        }
+      } catch (githubError) {
+        console.warn('Could not fetch GitHub token:', githubError)
+        // Non-fatal, continue without GitHub token
+      }
+      
       // Create session record for desktop app
       try {
         await supabase.from('user_sessions').insert({
@@ -63,7 +83,7 @@ export default function DesktopAppAuth() {
         // Non-fatal error, continue with auth
       }
       
-      // Build the deep link URL with user data including Pro/Admin status
+      // Build the deep link URL with user data including Pro/Admin status and GitHub token
       const params = new URLSearchParams({
         userId: user.id,
         email: user.email,
@@ -75,6 +95,11 @@ export default function DesktopAppAuth() {
         isPro: isPro.toString(),
         isAdmin: isAdmin.toString(),
       })
+      
+      // Add GitHub token if available
+      if (githubToken) {
+        params.append('githubToken', githubToken)
+      }
       
       const deepLink = `${redirectUrl}?${params.toString()}`
       setDeepLinkUrl(deepLink)
@@ -158,6 +183,23 @@ export default function DesktopAppAuth() {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/desktop-auth?redirect=${encodeURIComponent(redirectUrl)}`,
+        },
+      })
+      if (error) throw error
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  async function handleGithubLogin() {
+    setError('')
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/desktop-auth?redirect=${encodeURIComponent(redirectUrl)}`,
+          scopes: 'repo read:user',
         },
       })
       if (error) throw error
@@ -293,6 +335,7 @@ export default function DesktopAppAuth() {
         error={error}
         onSubmit={handleLogin}
         onGoogleSignIn={handleGoogleLogin}
+        onGithubSignIn={handleGithubLogin}
         footerCta={
           <>
             No account? <Link to={`/signup?redirect=${encodeURIComponent(redirectUrl)}`} className="font-semibold text-[var(--primary)] hover:underline">Sign up</Link>
