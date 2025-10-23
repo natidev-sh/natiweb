@@ -48,6 +48,21 @@ export default function Login() {
     }
   }
 
+  async function handleGithubLogin() {
+    setError('')
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      })
+      if (error) throw error
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
   return (
     <>
       <PageMeta
@@ -62,6 +77,7 @@ export default function Login() {
         error={error}
         onSubmit={handleLogin}
         onGoogleSignIn={handleGoogleLogin}
+        onGithubSignIn={handleGithubLogin}
         footerCta={
           <>
             No account? <Link to="/signup" className="font-semibold text-[var(--primary)] hover:underline">Sign up</Link>
