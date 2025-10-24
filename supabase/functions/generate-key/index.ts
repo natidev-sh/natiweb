@@ -6,7 +6,7 @@ const LITELLM_MASTER_KEY = Deno.env.get('LITELLM_MASTER_KEY')
 
 // Credit system constants
 const CONVERSION_RATIO = 15
-const DEFAULT_CREDITS = 350  
+const DEFAULT_CREDITS = 300  
 const DEFAULT_MAX_BUDGET = DEFAULT_CREDITS / CONVERSION_RATIO 
 
 const corsHeaders = {
@@ -41,7 +41,32 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}))
     const metadata = body.metadata || { purpose: 'dev-pro', user_email: user.email }
 
-    // Prepare the request payload for LiteLLM
+    // Step 1: Register end user in LiteLLM first
+    const endUserPayload = {
+      user_id: user.id,
+      max_budget: DEFAULT_MAX_BUDGET,
+      budget_duration: "30d",
+    }
+
+    const endUserResponse = await fetch('https://litellm-production-6380.up.railway.app/end_user/new', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LITELLM_MASTER_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(endUserPayload),
+    })
+
+    // Don't fail if user already exists (409 conflict is ok)
+    if (!endUserResponse.ok && endUserResponse.status !== 409) {
+      const errorData = await endUserResponse.json()
+      console.error('Failed to register end user:', errorData)
+      // Continue anyway - the user might already exist
+    } else {
+      console.log('End user registered successfully:', user.id)
+    }
+
+    // Step 2: Prepare the request payload for LiteLLM virtual key
     const liteLLMPayload = {
       max_budget: DEFAULT_MAX_BUDGET,  // Set budget limit (350 credits = $23.33)
       budget_duration: "30d",          // Reset every 30 days

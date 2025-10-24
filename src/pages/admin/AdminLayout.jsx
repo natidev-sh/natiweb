@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Users, Settings, ChevronDown, ExternalLink, Palette, Mail, Send, Tag, Ticket, Download, Rocket } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Settings, ChevronDown, ExternalLink, Palette, Mail, Send, Tag, Ticket, Download, Rocket, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FooterGlow from '@/components/FooterGlow';
 
 const adminNavItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   {
     name: 'Content',
     icon: FileText,

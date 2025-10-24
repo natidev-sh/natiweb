@@ -34,6 +34,7 @@ import NotFound from './pages/NotFound.jsx'
 import Verify2FA from './pages/Verify2FA.jsx'
 import PublicRouteOnly from './auth/PublicRouteOnly.jsx'
 import AdminWaitlist from './pages/admin/AdminWaitlist.jsx'
+import AdminAnalytics from './pages/admin/AdminAnalytics.jsx'
 import AdminEmailBroadcast from './pages/admin/AdminEmailBroadcast.jsx'
 import AdminCoupons from './pages/admin/AdminCoupons.jsx'
 import AdminUserDetails from './pages/admin/AdminUserDetails.jsx'
@@ -68,6 +69,7 @@ import Integrations from './pages/Integrations.jsx'
 import Playground from './pages/Playground.jsx'
 import SupabaseOAuth from './pages/SupabaseOAuth.jsx'
 import SupabaseOAuthCallback from './pages/SupabaseOAuthCallback.jsx'
+import NatiDB from './NatiDB.jsx'
 import { Analytics } from "@vercel/analytics/react" // Corrected import for React
 
 export default function App() {
@@ -123,6 +125,7 @@ export default function App() {
             <Route path="/playground" element={<Playground />} />
             <Route path="/supabase-oauth/login" element={<SupabaseOAuth />} />
             <Route path="/supabase-oauth/callback" element={<SupabaseOAuthCallback />} />
+            <Route path="/natidb" element={<NatiDB />} />
             <Route path="/invite/:token" element={<AcceptInvite />} />
             
             {/* Legal Pages */}
@@ -147,6 +150,7 @@ export default function App() {
             <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="posts" element={<AdminPosts />} />
               <Route path="posts/new" element={<PostEditor />} />
               <Route path="posts/edit/:slug" element={<PostEditor />} />

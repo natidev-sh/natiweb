@@ -1,13 +1,19 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import PageMeta from '@/components/PageMeta';
-import { Search, Mail, Clock, Download, RefreshCw, Trash2 } from 'lucide-react';
+import { Search, Mail, Clock, Download, RefreshCw, Trash2, Users, TrendingUp, Calendar, Sparkles } from 'lucide-react';
 
 export default function AdminWaitlist() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [stats, setStats] = useState({
+    total: 0,
+    last24h: 0,
+    last7days: 0,
+    last30days: 0,
+  });
 
   const fetchWaitlist = useCallback(async () => {
     setLoading(true);
@@ -20,9 +26,28 @@ export default function AdminWaitlist() {
       console.error('Error fetching waitlist:', error);
     } else {
       setEntries(data || []);
+      calculateStats(data || []);
     }
     setLoading(false);
   }, []);
+
+  const calculateStats = (data) => {
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const last24h = data.filter(entry => new Date(entry.created_at) > oneDayAgo).length;
+    const last7days = data.filter(entry => new Date(entry.created_at) > sevenDaysAgo).length;
+    const last30days = data.filter(entry => new Date(entry.created_at) > thirtyDaysAgo).length;
+
+    setStats({
+      total: data.length,
+      last24h,
+      last7days,
+      last30days,
+    });
+  };
 
   useEffect(() => {
     fetchWaitlist();
@@ -101,11 +126,12 @@ export default function AdminWaitlist() {
     <>
       <PageMeta title="Waitlist Management | Admin" />
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold">Waitlist Management</h1>
             <p className="text-[var(--muted-foreground)] text-sm mt-1">
-              {entries.length} total {entries.length === 1 ? 'email' : 'emails'} collected
+              Manage and export your waitlist subscribers
             </p>
           </div>
           
@@ -129,23 +155,114 @@ export default function AdminWaitlist() {
             </button>
           </div>
         </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Subscribers */}
+          <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Users className="h-5 w-5 text-blue-500" />
+              </div>
+              <Sparkles className="h-4 w-4 text-blue-500/50" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-[var(--muted-foreground)]">Total Subscribers</p>
+              <p className="text-3xl font-bold">{stats.total}</p>
+            </div>
+          </div>
+
+          {/* Last 24 Hours */}
+          <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-green-500/20 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+              <span className="text-xs font-medium text-green-500 bg-green-500/20 px-2 py-1 rounded-full">24h</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-[var(--muted-foreground)]">Last 24 Hours</p>
+              <p className="text-3xl font-bold">{stats.last24h}</p>
+            </div>
+          </div>
+
+          {/* Last 7 Days */}
+          <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border border-purple-500/20 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <Calendar className="h-5 w-5 text-purple-500" />
+              </div>
+              <span className="text-xs font-medium text-purple-500 bg-purple-500/20 px-2 py-1 rounded-full">7d</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-[var(--muted-foreground)]">Last 7 Days</p>
+              <p className="text-3xl font-bold">{stats.last7days}</p>
+            </div>
+          </div>
+
+          {/* Last 30 Days */}
+          <div className="bg-gradient-to-br from-rose-500/10 to-rose-600/10 border border-rose-500/20 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-rose-500/20 rounded-lg">
+                <Mail className="h-5 w-5 text-rose-500" />
+              </div>
+              <span className="text-xs font-medium text-rose-500 bg-rose-500/20 px-2 py-1 rounded-full">30d</span>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-[var(--muted-foreground)]">Last 30 Days</p>
+              <p className="text-3xl font-bold">{stats.last30days}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Growth Indicator */}
+        {stats.total > 0 && (
+          <div className="bg-[var(--accent)] border border-[var(--border)] rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-[var(--primary)]/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-[var(--primary)]" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Growth Rate</p>
+                <p className="text-sm text-[var(--muted-foreground)]">
+                  {stats.last7days > 0 
+                    ? `${stats.last7days} new subscribers in the last 7 days`
+                    : 'No new subscribers in the last 7 days'}
+                  {stats.last30days > 0 && ` • ${Math.round((stats.last7days / stats.last30days) * 100)}% of monthly growth`}
+                </p>
+              </div>
+              {stats.last7days > 0 && (
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-[var(--primary)]">
+                    {stats.last30days > 0 ? `${Math.round((stats.last7days / (stats.last30days / 4)) * 100)}%` : '0%'}
+                  </p>
+                  <p className="text-xs text-[var(--muted-foreground)]">vs last week</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--muted-foreground)]" />
-          <input
-            type="text"
-            placeholder="Search by email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full max-w-sm pl-10 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--background)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/30 transition-all"
-          />
+        {/* Search Bar */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--muted-foreground)]" />
+            <input
+              type="text"
+              placeholder="Search by email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--background)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/30 transition-all"
+            />
+          </div>
           {searchQuery && (
-            <span className="ml-3 text-sm text-[var(--muted-foreground)]">
+            <span className="text-sm text-[var(--muted-foreground)]">
               Found {filteredEntries.length} {filteredEntries.length === 1 ? 'result' : 'results'}
             </span>
           )}
         </div>
 
+        {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="flex items-center gap-2 text-[var(--muted-foreground)]">
@@ -214,6 +331,7 @@ export default function AdminWaitlist() {
           </div>
         )}
 
+        {/* Footer Info */}
         {filteredEntries.length > 0 && (
           <div className="flex items-center justify-between text-sm text-[var(--muted-foreground)] bg-[var(--accent)] p-4 rounded-lg">
             <span>
